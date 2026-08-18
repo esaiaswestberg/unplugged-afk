@@ -22,10 +22,17 @@ package com.sakuraryoko.unplugged_afk.impl;
 
 import java.nio.file.Path;
 
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.sakuraryoko.unplugged_afk.impl.commands.CommandRegister;
 import com.sakuraryoko.unplugged_afk.impl.config.JsonConfigManager;
 import com.sakuraryoko.unplugged_afk.impl.config.UnpluggedConfigHandler;
+import com.sakuraryoko.unplugged_afk.impl.events.BukkitBridge;
+import com.sakuraryoko.unplugged_afk.impl.events.ServerEventsHandler;
+import com.sakuraryoko.unplugged_afk.impl.events.TickDriver;
+import com.sakuraryoko.unplugged_afk.impl.nms.Nms;
+import com.sakuraryoko.unplugged_afk.impl.player.PlayerManager;
 
 /**
  * Paper plugin entry point. Replaces the Fabric {@code ModInitializer} plus the
@@ -53,21 +60,33 @@ public class UnpluggedAfkPlugin extends JavaPlugin
 
         // The Fabric mod kept unplugged_afk.json in the game root; adopt any such file once.
         configs.migrateFromLegacyLocation(UnpluggedConfigHandler.getInstance(), Path.of("."));
+
+        // PlayerManager owns what the Fabric config handler called directly.
+        UnpluggedConfigHandler.getInstance().setExecuteHandler(PlayerManager.getInstance());
         configs.loadEach(true);
+
+        CommandRegister.register(this);
     }
 
     @Override
     public void onEnable()
     {
         UnpluggedConfigHandler.getInstance().setStartTime();
+        ServerEventsHandler.getInstance().onStarting(Nms.server());
+
+        TickDriver.register(this);
+        BukkitBridge.register(this);
+
         Log.info("{} v{} enabled", Reference.MOD_NAME, this.getPluginMeta().getVersion());
     }
 
     @Override
     public void onDisable()
     {
+        ServerEventsHandler.getInstance().onStopping(Nms.server());
         UnpluggedConfigHandler.getInstance().setStopTime();
         JsonConfigManager.getInstance().saveEach();
+
         Log.info("{} disabled", Reference.MOD_NAME);
         instance = null;
     }

@@ -18,22 +18,33 @@
  * along with Unplugged-AFK.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.sakuraryoko.unplugged_afk.impl;
+package com.sakuraryoko.unplugged_afk.api.event;
 
-import org.jetbrains.annotations.ApiStatus;
+import java.util.UUID;
 
-@ApiStatus.Internal
-public class Reference
+import org.bukkit.event.HandlerList;
+import org.jetbrains.annotations.Nullable;
+
+import com.sakuraryoko.unplugged_afk.api.state.UnpluggedState;
+
+/** Fired when an unplugged session ends. */
+public class UnpluggedEndEvent extends UnpluggedEvent
 {
-    public static final String MOD_ID = "unplugged_afk";
-    public static final String MOD_NAME = "UnpluggedAFK";
-    public static final String CONFIG_NAME = MOD_ID;
-    public static final String CONFIG_FILE = CONFIG_NAME + ".json";
+    private static final HandlerList HANDLERS = new HandlerList();
 
-    public static final String UNPLUG_COMMAND = "unplug";
-    public static final String AFK_COMMAND = "afk";
-    public static final String ADMIN_COMMAND = "unplugged-admin";
+    public UnpluggedEndEvent(@Nullable UUID player, UnpluggedState state)
+    {
+        super(player, state);
+    }
 
-    /** Compile-time debug flag, OR'd with the {@code main.debugMode} config option. */
-    public static final boolean DEBUG = false;
+    @Override
+    public HandlerList getHandlers()
+    {
+        return HANDLERS;
+    }
+
+    public static HandlerList getHandlerList()
+    {
+        return HANDLERS;
+    }
 }
