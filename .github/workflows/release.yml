@@ -10,6 +10,10 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # Mirrored into env because the secrets context is not available to a
+    # step-level `if`, and the Modrinth step needs to test whether this is set.
+    env:
+      MODRINTH_ID: ${{ secrets.MODRINTH_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -30,3 +34,40 @@ jobs:
         with:
           files: build/libs/*.jar
           generate_release_notes: true
+
+      # gradle.properties is the single source of truth for the Minecraft
+      # version, so Modrinth cannot drift from what the plugin was built against.
+      - name: Read plugin metadata
+        id: meta
+        run: |
+          sed -e 's/^[[:space:]]*//' gradle.properties \
+            | grep -E '^(minecraft_version|plugin_version)=' >> "$GITHUB_OUTPUT"
+
+      - name: Read release notes
+        id: notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo 'body<<GH_RELEASE_BODY_EOF'
+            gh release view "${{ github.ref_name }}" --json body --jq .body
+            echo 'GH_RELEASE_BODY_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      # Skipped until the MODRINTH_ID secret is set, so tagging a release never
+      # fails just because the Modrinth project does not exist yet.
+      - name: Publish to Modrinth
+        if: env.MODRINTH_ID != ''
+        uses: Kira-NT/mc-publish@v3.3.1
+        with:
+          modrinth-id: ${{ secrets.MODRINTH_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: build/libs/*.jar
+          name: ${{ steps.meta.outputs.plugin_version }}
+          version: ${{ steps.meta.outputs.plugin_version }}
+          changelog: ${{ steps.notes.outputs.body }}
+          loaders: |
+            paper
+            purpur
+          game-versions: ${{ steps.meta.outputs.minecraft_version }}
+          java: 25

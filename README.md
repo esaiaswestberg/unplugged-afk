@@ -140,6 +140,23 @@ a client; if you hit that, exempt the bots or turn on `unpluggedHidePlayer`.
 
 The jar is written to `build/libs/`.
 
+## Releasing
+
+Pushing a `v*` tag builds the plugin, creates a GitHub release with the jar
+attached, and publishes the same jar to Modrinth.
+
+The Modrinth step is skipped unless both of these repository secrets are set
+under *Settings → Secrets and variables → Actions*:
+
+| Secret | Value |
+|:---|:---|
+| `MODRINTH_ID` | The Modrinth project ID or slug. |
+| `MODRINTH_TOKEN` | A Modrinth PAT with the *Create versions* and *Write projects* scopes. |
+
+The Modrinth version number and the game version it is listed under are read
+from `gradle.properties`, so bump `plugin_version` and `minecraft_version`
+there rather than in the workflow.
+
 ## Licence
 
 LGPL-3.0, inherited from the original mod. Copyright remains with sakura-ryoko
