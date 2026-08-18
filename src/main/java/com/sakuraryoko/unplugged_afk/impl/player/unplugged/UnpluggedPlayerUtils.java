@@ -264,9 +264,10 @@ public class UnpluggedPlayerUtils
                 PlayerEventsHandler.getInstance().addShouldHideJoin(name);
             }
 
+            // Immediate: the returning player's login cannot wait a tick for the
+            // shadow to go away. kill() performs the removal itself.
             String str = ConfigWrap.mess().unpluggedReplaced;
-            sp.kill(Text.of(str));
-            playerList.remove(player);
+            sp.kill(Text.of(str), true);
         }
     }
 

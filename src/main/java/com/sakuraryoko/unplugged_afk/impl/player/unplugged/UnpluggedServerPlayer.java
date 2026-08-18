@@ -99,6 +99,7 @@ public class UnpluggedServerPlayer extends ServerPlayer
     private long timeout = -1L;
     private long lastTick = -1L;
     private boolean isValid = false;
+    private boolean removalStarted = false;
     private boolean expired = false;
 
     public UnpluggedServerPlayer(MinecraftServer server, ServerLevel level, GameProfile profile, ClientInformation ci)
@@ -560,9 +561,39 @@ public class UnpluggedServerPlayer extends ServerPlayer
 
     public void kill(Component message)
     {
+        this.kill(message, false);
+    }
+
+    /**
+     * Tears the shadow down exactly once.
+     *
+     * <p>{@code onDisconnect} is the whole teardown -- it closes the chat chain
+     * and calls {@code PlayerList#remove}, which saves the shadow's NBT and
+     * fires {@code PlayerQuitEvent}. Call sites must therefore NOT also call
+     * {@code PlayerList#remove}: on Paper a second removal fires a second
+     * {@code PlayerQuitEvent} (breaking plugins that tracked the first) and
+     * re-retires the entity scheduler, which throws "Already retired".
+     *
+     * @param immediate remove within this tick instead of the next. Required on
+     *                  the pre-login path, where a returning player's login
+     *                  cannot wait for the shadow to go away.
+     */
+    public void kill(Component message, boolean immediate)
+    {
+        if (this.removalStarted)
+        {
+            return;
+        }
+
+        this.removalStarted = true;
         this.dismount();
         this.killShadow(message);
-        if (message.getContents() instanceof TranslatableContents text && text.getKey().equals("multiplayer.disconnect.duplicate_login"))
+
+        boolean now = immediate ||
+                      (message.getContents() instanceof TranslatableContents text &&
+                       text.getKey().equals("multiplayer.disconnect.duplicate_login"));
+
+        if (now)
         {
             this.connection.onDisconnect(new DisconnectionDetails(message));
         }
@@ -609,7 +640,6 @@ public class UnpluggedServerPlayer extends ServerPlayer
                 final Component reason = Text.of("Invalid");
 
                 this.kill(reason);
-                server.getPlayerList().remove(this);
 
                 if (!ConfigWrap.mess().hideUnpluggedJoin)
                 {
@@ -701,7 +731,6 @@ public class UnpluggedServerPlayer extends ServerPlayer
 
                 Component reason = Text.of(mess);
                 this.kill(reason);
-                pl.remove(this);
 
                 if (ConfigWrap.mess().hideUnpluggedJoin)
                 {
