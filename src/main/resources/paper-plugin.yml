@@ -50,3 +50,6 @@ permissions:
   unplugged_afk.unplugged-admin.set:
     description: Allows use of /unplugged-admin set
     default: op
+  unplugged_afk.maxtime.unlimited:
+    description: Removes the ceiling on unplugged session length
+    default: op

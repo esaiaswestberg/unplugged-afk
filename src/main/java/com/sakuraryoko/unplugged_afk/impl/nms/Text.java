@@ -54,9 +54,28 @@ public class Text
         return LegacyComponentSerializer.legacySection().deserialize(text == null ? "" : text);
     }
 
-    public static net.kyori.adventure.text.Component adventure(Component component)
+    /**
+     * Delivers a vanilla component to a command source.
+     *
+     * <p>Players get it as-is over NMS, which keeps the legacy colour codes and
+     * the click/hover events intact and never involves Adventure.
+     *
+     * <p>The console is an Adventure sender, so handing it a component whose
+     * content still holds raw section signs makes Adventure log
+     * {@code LegacyFormattingDetected} (at construction, so it cannot be
+     * repaired after the fact) and print them literally. For that path the codes
+     * are parsed into real Adventure styles instead; click and hover mean
+     * nothing on a console line, so nothing of value is lost.
+     */
+    public static void send(io.papermc.paper.command.brigadier.CommandSourceStack source, Component message)
     {
-        return io.papermc.paper.adventure.PaperAdventure.asAdventure(component);
+        if (source.getExecutor() instanceof org.bukkit.entity.Player player)
+        {
+            Nms.handle(player).sendSystemMessage(message);
+            return;
+        }
+
+        source.getSender().sendMessage(adventure(message.getString()));
     }
 
     /** {@code &} -> {@code §}; used when writing config values via /unplugged-admin set. */

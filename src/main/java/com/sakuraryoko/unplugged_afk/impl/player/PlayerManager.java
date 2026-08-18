@@ -32,7 +32,6 @@ import org.jetbrains.annotations.VisibleForTesting;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.context.CommandContext;
-import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -45,6 +44,7 @@ import com.sakuraryoko.unplugged_afk.api.state.UnpluggedState;
 import com.sakuraryoko.unplugged_afk.api.state.UnpluggedStatus;
 import com.sakuraryoko.unplugged_afk.impl.Reference;
 import com.sakuraryoko.unplugged_afk.impl.config.ConfigWrap;
+import com.sakuraryoko.unplugged_afk.impl.nms.Nms;
 import com.sakuraryoko.unplugged_afk.impl.config.IConfigExecuteHandler;
 import com.sakuraryoko.unplugged_afk.impl.config.data.UnpluggedConfigData;
 import com.sakuraryoko.unplugged_afk.impl.events.ServerEventsHandler;
@@ -394,10 +394,10 @@ public class PlayerManager implements IConfigExecuteHandler
     }
 
     @ApiStatus.Internal
-    public ImmutableList<GameProfile> getSpawnCommandSuggestions(@Nonnull CommandContext<CommandSourceStack> ctx)
+    public ImmutableList<GameProfile> getSpawnCommandSuggestions(@Nonnull CommandContext<?> ctx)
     {
         ImmutableList.Builder<GameProfile> builder = ImmutableList.builder();
-        MinecraftServer server = ctx.getSource().getServer();
+        MinecraftServer server = Nms.server();
         PlayerList playerList = server.getPlayerList();
         final List<ServerPlayer> players = playerList.getPlayers();
 
@@ -426,10 +426,10 @@ public class PlayerManager implements IConfigExecuteHandler
     }
 
     @ApiStatus.Internal
-    public ImmutableList<GameProfile> getKickCommandSuggestions(@Nonnull CommandContext<CommandSourceStack> ctx)
+    public ImmutableList<GameProfile> getKickCommandSuggestions(@Nonnull CommandContext<?> ctx)
     {
         ImmutableList.Builder<GameProfile> builder = ImmutableList.builder();
-        MinecraftServer server = ctx.getSource().getServer();
+        MinecraftServer server = Nms.server();
         PlayerList playerList = server.getPlayerList();
         final List<ServerPlayer> players = playerList.getPlayers();
 

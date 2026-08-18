@@ -28,6 +28,7 @@ import org.jetbrains.annotations.ApiStatus;
 import com.sakuraryoko.unplugged_afk.impl.Log;
 import com.sakuraryoko.unplugged_afk.impl.Reference;
 import com.sakuraryoko.unplugged_afk.impl.commands.server.DebugCommand;
+import com.sakuraryoko.unplugged_afk.impl.commands.server.UnpluggedAdminCommand;
 import com.sakuraryoko.unplugged_afk.impl.commands.server.UnplugCommand;
 import com.sakuraryoko.unplugged_afk.impl.config.ConfigWrap;
 
@@ -49,6 +50,10 @@ public class CommandRegister
 
             // TEMPORARY test harness
             registrar.register(DebugCommand.build(), "Unplugged-AFK debug harness");
+
+            // The admin command stays available even when the feature is off,
+            // so an operator can turn it back on with /unplugged-admin set.
+            registrar.register(UnpluggedAdminCommand.build(), "Manage Unplugged-AFK");
 
             if (!ConfigWrap.mainOpt().unpluggedAfkEnabled)
             {

@@ -33,6 +33,7 @@ import net.minecraft.server.level.ServerPlayer;
 
 import com.sakuraryoko.unplugged_afk.impl.Reference;
 import com.sakuraryoko.unplugged_afk.impl.commands.Perms;
+import com.sakuraryoko.unplugged_afk.impl.commands.TimeLimits;
 import com.sakuraryoko.unplugged_afk.impl.config.ConfigWrap;
 import com.sakuraryoko.unplugged_afk.impl.nms.Nms;
 import com.sakuraryoko.unplugged_afk.impl.nms.Text;
@@ -76,7 +77,9 @@ public class UnplugCommand
 
         ServerPlayer player = Nms.handle(bukkitPlayer);
 
-        if (time <= 0)
+        boolean explicit = time > 0;
+
+        if (!explicit)
         {
             time = ConfigWrap.unplugged().defaultUnpluggedTimeout;
         }
@@ -87,6 +90,21 @@ public class UnplugCommand
         if (reason == null || reason.isEmpty())
         {
             reason = ConfigWrap.mess().defaultUnpluggedReason;
+        }
+
+        // Permission ceiling (unplugged_afk.maxtime.<minutes>) overrides both an
+        // explicit argument and the config default.
+        int allowed = TimeLimits.clamp(ctx.getSource().getSender(), time);
+
+        if (allowed < time)
+        {
+            if (explicit)
+            {
+                ctx.getSource().getSender().sendMessage(Text.adventure(
+                        "§eYou may stay unplugged for at most §a" + allowed + "§e minutes; using that instead.§r"));
+            }
+
+            time = allowed;
         }
 
         if (!UnpluggedServerPlayer.createFromPlayer(Nms.server(), player, time, reason))
