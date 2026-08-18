@@ -22,7 +22,7 @@ package com.sakuraryoko.unplugged_afk.impl.config.data.options;
 
 import org.jetbrains.annotations.ApiStatus;
 
-import com.sakuraryoko.corelib.api.config.IConfigOption;
+import com.sakuraryoko.unplugged_afk.impl.config.IConfigOption;
 
 @ApiStatus.Internal
 public class CommandOptions implements IConfigOption
@@ -38,6 +38,7 @@ public class CommandOptions implements IConfigOption
         this.defaults();
     }
 
+    @Override
     public void defaults()
     {
         this.unplugCommandPermissions = 0;

@@ -27,11 +27,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
 
-import com.sakuraryoko.unplugged_afk.impl.modinit.InitWrap;
+import com.sakuraryoko.unplugged_afk.impl.nms.Text;
 import com.sakuraryoko.unplugged_afk.impl.player.wrap.PosWrap;
 
 /**
  * PosState - Wrapper around a Players' location, and rotations
+ *
  * @param location Level Identifier
  * @param x Entity Block X
  * @param y Entity Block Y
@@ -41,79 +42,66 @@ import com.sakuraryoko.unplugged_afk.impl.player.wrap.PosWrap;
  */
 public record PosState(String location, int x, int y, int z, float yaw, float pitch)
 {
-	@Override
-	public @NonNull String toString()
-	{
-		return "PosState{dim="+this.location()+", [x="+this.x()+",y="+this.y()+",z="+this.z()+",yaw="+this.yaw()+",pitch="+this.pitch()+"]}";
-	}
+    @Override
+    public @NonNull String toString()
+    {
+        return "PosState{dim="+this.location()+", [x="+this.x()+",y="+this.y()+",z="+this.z()+",yaw="+this.yaw()+",pitch="+this.pitch()+"]}";
+    }
 
-	@Override
-	public boolean equals(Object o)
-	{
-		if (this == o) { return true; }
-		if (o == null || getClass() != o.getClass()) { return false; }
-		PosState posState = (PosState) o;
+    /** Deliberately compares dimension plus block coords only. */
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
+        PosState posState = (PosState) o;
 
-		if (this.location().equals(posState.location()))
-		{
-			return  this.x() == posState.x() && this.y() == posState.y() && this.z() == posState.z();
-		}
+        if (this.location().equals(posState.location()))
+        {
+            return  this.x() == posState.x() && this.y() == posState.y() && this.z() == posState.z();
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	@Override
-	public int hashCode()
-	{
-		int result = this.location().hashCode();
-		result = 31 * result + this.x();
-		result = 31 * result + this.y();
-		result = 31 * result + this.z();
-		result = 31 * result + Float.floatToIntBits(this.yaw());
-		result = 31 * result + Float.floatToIntBits(this.pitch());
-		return result;
-	}
+    @Override
+    public int hashCode()
+    {
+        int result = this.location().hashCode();
+        result = 31 * result + this.x();
+        result = 31 * result + this.y();
+        result = 31 * result + this.z();
+        result = 31 * result + Float.floatToIntBits(this.yaw());
+        result = 31 * result + Float.floatToIntBits(this.pitch());
+        return result;
+    }
 
-	public boolean isEmpty()
-	{
-		return this.x() == 0 && this.y() == 0 && this.z() == 0;
-	}
+    public boolean isEmpty()
+    {
+        return this.x() == 0 && this.y() == 0 && this.z() == 0;
+    }
 
-	public boolean matches(@Nonnull ServerPlayer player)
-	{
-		PosState os = PosWrap.of(player);
-		return this.equals(os);
-	}
+    public boolean matches(@Nonnull ServerPlayer player)
+    {
+        PosState os = PosWrap.of(player);
+        return this.equals(os);
+    }
 
-	public Component getDebugFormatted()
-	{
-		MutableComponent text = Component.literal("");
+    public Component getDebugFormatted()
+    {
+        MutableComponent text = Text.empty();
 
-		text.append(
-				InitWrap.text().formatText(
-						String.format("§b%s§r", this.location())
-				)
-		).append(
-				InitWrap.text().formatText("§f [")
-		).append(
-				InitWrap.text().formatText(
-						String.format("%d, ", this.x())
-				)
-		).append(
-				InitWrap.text().formatText(
-						String.format("%d, ", this.y())
-				)
-        ).append(
-				InitWrap.text().formatText(
-						String.format("%d]§r", this.z())
-				)
-		);
+        text.append(Text.of(String.format("§b%s§r", this.location())))
+            .append(Text.of("§f ["))
+            .append(Text.of(String.format("%d, ", this.x())))
+            .append(Text.of(String.format("%d, ", this.y())))
+            .append(Text.of(String.format("%d]§r", this.z())));
 
-		return text;
-	}
+        return text;
+    }
 
-	public PosState copy()
-	{
-		return new PosState(this.location(), this.x(), this.y(), this.z(), this.yaw(), this.pitch());
-	}
+    public PosState copy()
+    {
+        return new PosState(this.location(), this.x(), this.y(), this.z(), this.yaw(), this.pitch());
+    }
 }

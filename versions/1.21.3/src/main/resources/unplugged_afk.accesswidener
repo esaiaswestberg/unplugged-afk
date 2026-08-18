@@ -1,2 +1,0 @@
-accessWidener v2 named
-accessible method net/minecraft/world/level/block/entity/SkullBlockEntity fetchGameProfile (Ljava/lang/String;)Ljava/util/concurrent/CompletableFuture;

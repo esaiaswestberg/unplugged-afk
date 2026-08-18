@@ -20,17 +20,16 @@
 
 package com.sakuraryoko.unplugged_afk.impl;
 
-import java.nio.file.Path;
 import org.jetbrains.annotations.ApiStatus;
-
-import net.fabricmc.loader.api.FabricLoader;
 
 @ApiStatus.Internal
 public class Reference
 {
-	public static final Path GAME_DIR = FabricLoader.getInstance().getGameDir();
-	public static final Path CONFIG_DIR = FabricLoader.getInstance().getConfigDir();
-	public static final String MOD_ID = "unplugged_afk";
-	public static final boolean DEBUG = false;
+    public static final String MOD_ID = "unplugged_afk";
+    public static final String MOD_NAME = "UnpluggedAFK";
+    public static final String CONFIG_NAME = MOD_ID;
+    public static final String CONFIG_FILE = CONFIG_NAME + ".json";
 
+    /** Compile-time debug flag, OR'd with the {@code main.debugMode} config option. */
+    public static final boolean DEBUG = false;
 }

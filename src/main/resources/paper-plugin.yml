@@ -1,0 +1,52 @@
+name: ${name}
+version: '${version}'
+main: com.sakuraryoko.unplugged_afk.impl.UnpluggedAfkPlugin
+api-version: '${apiVersion}'
+description: ${description}
+authors:
+  - ${author}
+website: https://github.com/esaiaswestberg/unplugged-afk
+
+permissions:
+  unplugged_afk.unplug:
+    description: Allows use of /unplug
+    default: true
+  unplugged_afk.afk:
+    description: Allows use of /afk
+    default: true
+  unplugged_afk.unplugged-admin:
+    description: Allows use of /unplugged-admin
+    default: op
+  unplugged_afk.unplugged-admin.save:
+    description: Allows use of /unplugged-admin save
+    default: op
+  unplugged_afk.unplugged-admin.reload:
+    description: Allows use of /unplugged-admin reload
+    default: op
+  unplugged_afk.unplugged-admin.list:
+    description: Allows use of /unplugged-admin list
+    default: op
+  unplugged_afk.unplugged-admin.list.players:
+    description: Allows use of /unplugged-admin list players
+    default: op
+  unplugged_afk.unplugged-admin.list.unplugged:
+    description: Allows use of /unplugged-admin list unplugged
+    default: op
+  unplugged_afk.unplugged-admin.list.all:
+    description: Allows use of /unplugged-admin list all
+    default: op
+  unplugged_afk.unplugged-admin.info:
+    description: Allows use of /unplugged-admin info
+    default: op
+  unplugged_afk.unplugged-admin.purge:
+    description: Allows use of /unplugged-admin purge
+    default: op
+  unplugged_afk.unplugged-admin.spawn:
+    description: Allows use of /unplugged-admin spawn
+    default: op
+  unplugged_afk.unplugged-admin.kick:
+    description: Allows use of /unplugged-admin kick
+    default: op
+  unplugged_afk.unplugged-admin.set:
+    description: Allows use of /unplugged-admin set
+    default: op

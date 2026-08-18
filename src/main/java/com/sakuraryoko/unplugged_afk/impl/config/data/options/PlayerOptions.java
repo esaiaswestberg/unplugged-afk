@@ -22,107 +22,113 @@ package com.sakuraryoko.unplugged_afk.impl.config.data.options;
 
 import java.util.UUID;
 
-import com.sakuraryoko.corelib.api.log.AnsiLogger;
-import com.sakuraryoko.unplugged_afk.api.state.GameState;
-import com.sakuraryoko.unplugged_afk.api.state.PosState;
-import com.sakuraryoko.unplugged_afk.api.state.UnpluggedState;
-import com.sakuraryoko.unplugged_afk.impl.player.wrap.*;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import com.mojang.authlib.GameProfile;
 
-import com.sakuraryoko.corelib.api.config.IConfigOption;
+import com.sakuraryoko.unplugged_afk.api.state.GameState;
+import com.sakuraryoko.unplugged_afk.api.state.PosState;
+import com.sakuraryoko.unplugged_afk.api.state.UnpluggedState;
+import com.sakuraryoko.unplugged_afk.impl.Log;
+import com.sakuraryoko.unplugged_afk.impl.config.IConfigOption;
+import com.sakuraryoko.unplugged_afk.impl.player.wrap.GameWrap;
+import com.sakuraryoko.unplugged_afk.impl.player.wrap.PosWrap;
+import com.sakuraryoko.unplugged_afk.impl.player.wrap.ProfileWrap;
 
 @ApiStatus.Internal
 public class PlayerOptions implements IConfigOption
 {
-	public UUID uuid;
-	public String name;
-	public UnpluggedState state;
-	public PosState pos;
-	public GameState game;
+    public UUID uuid;
+    public String name;
+    public UnpluggedState state;
+    public PosState pos;
+    public GameState game;
 
-	public PlayerOptions()
-	{
-		this.defaults();
-	}
+    public PlayerOptions()
+    {
+        this.defaults();
+    }
 
-	public PlayerOptions(PlayerOptions other)
-	{
-		this.defaults();
-		this.copy(other);
-	}
+    public PlayerOptions(PlayerOptions other)
+    {
+        this.defaults();
+        this.copy(other);
+    }
 
-	@Override
-	public void defaults()
-	{
-		this.uuid = UUID.randomUUID();
-		this.name = this.uuid.toString();
-		this.state = UnpluggedState.DEFAULT;
-		this.pos = PosWrap.defaultPos();
-		this.game = GameWrap.defMode();
-	}
+    @Override
+    public void defaults()
+    {
+        this.uuid = UUID.randomUUID();
+        this.name = this.uuid.toString();
+        this.state = UnpluggedState.DEFAULT;
+        this.pos = PosWrap.defaultPos();
+        this.game = GameWrap.defMode();
+    }
 
-	@Override
-	public PlayerOptions copy(IConfigOption other)
-	{
-		if (other instanceof PlayerOptions opts)
-		{
-			this.uuid = opts.uuid;
-			this.name = opts.name;
-			this.state = opts.state.ensureValid();
-			this.pos = opts.pos;
-			this.game = opts.game;
-		}
+    @Override
+    public PlayerOptions copy(IConfigOption other)
+    {
+        if (other instanceof PlayerOptions opts)
+        {
+            this.uuid = opts.uuid;
+            this.name = opts.name;
+            this.state = opts.state.ensureValid();
+            this.pos = opts.pos;
+            this.game = opts.game;
+        }
 
-		return this;
-	}
+        return this;
+    }
 
-	@Override
-	public boolean equals(Object o)
-	{
-		if (this == o) { return true; }
-		if (o == null || getClass() != o.getClass()) { return false; }
+    /** Matches on UUID only. */
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
 
-		if (o instanceof PlayerOptions opt)
-		{
-			// Only match the UUID
-			return opt.uuid.equals(this.uuid);
-		}
+        if (o instanceof PlayerOptions opt)
+        {
+            return opt.uuid.equals(this.uuid);
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	public static PlayerOptions fromProfile(@NotNull GameProfile profile)
-	{
-		return fromProfile(profile, UnpluggedState.DEFAULT);
-	}
+    @Override
+    public int hashCode()
+    {
+        return this.uuid != null ? this.uuid.hashCode() : 0;
+    }
 
-	public static PlayerOptions fromProfile(@NotNull GameProfile profile, UnpluggedState state)
-	{
-		PlayerOptions opts = new PlayerOptions();
+    public static PlayerOptions fromProfile(@NotNull GameProfile profile)
+    {
+        return fromProfile(profile, UnpluggedState.DEFAULT);
+    }
 
-		opts.uuid = ProfileWrap.id(profile);
-		opts.name = ProfileWrap.name(profile);
-		opts.state = state.ensureValid();
-		opts.pos = PosWrap.defaultPos();
-		opts.game = GameWrap.defMode();
+    public static PlayerOptions fromProfile(@NotNull GameProfile profile, UnpluggedState state)
+    {
+        PlayerOptions opts = new PlayerOptions();
 
-		return opts;
-	}
+        opts.uuid = ProfileWrap.id(profile);
+        opts.name = ProfileWrap.name(profile);
+        opts.state = state.ensureValid();
+        opts.pos = PosWrap.defaultPos();
+        opts.game = GameWrap.defMode();
 
-	@VisibleForTesting
-	public void dump()
-	{
-		AnsiLogger logger = new AnsiLogger(PlayerOptions.class, true, true);
+        return opts;
+    }
 
-		logger.debug("Player Options:");
-		logger.debug(" - Name : {}", this.name);
-		logger.debug(" - UUID : {}", this.uuid.toString());
-		logger.debug(" - State: {}", this.state.toString());
-		logger.debug(" - Pos  : {}", this.pos.toString());
-		logger.debug(" - Game : {}", this.game.toString());
-	}
+    @VisibleForTesting
+    public void dump()
+    {
+        Log.debug("Player Options:");
+        Log.debug(" - Name : {}", this.name);
+        Log.debug(" - UUID : {}", this.uuid.toString());
+        Log.debug(" - State: {}", this.state.toString());
+        Log.debug(" - Pos  : {}", this.pos.toString());
+        Log.debug(" - Game : {}", this.game.toString());
+    }
 }

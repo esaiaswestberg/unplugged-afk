@@ -1,0 +1,98 @@
+/*
+ * This file is part of the Unplugged-AFK project, licensed under the
+ * GNU Lesser General Public License v3.0
+ *
+ * Copyright (C) 2026  Sakura-Ryoko and contributors
+ *
+ * Unplugged-AFK is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Unplugged-AFK is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Unplugged-AFK.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package com.sakuraryoko.unplugged_afk.impl.nms;
+
+import org.jetbrains.annotations.ApiStatus;
+
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+
+/**
+ * Replaces CoreLib's {@code BuiltinTextHandler}, which was simply
+ * {@code Component.literal(s)} -- the legacy section codes in the config are
+ * interpreted client side, so no parsing is required.
+ */
+@ApiStatus.Internal
+public class Text
+{
+    public static final char SECTION = '§';
+    public static final char AMPERSAND = '&';
+
+    /** Vanilla {@link Component} for a legacy section-code string. */
+    public static MutableComponent of(String text)
+    {
+        return Component.literal(text == null ? "" : text);
+    }
+
+    public static MutableComponent empty()
+    {
+        return Component.literal("");
+    }
+
+    /** Adventure component, for anything crossing into the Bukkit API surface. */
+    public static net.kyori.adventure.text.Component adventure(String text)
+    {
+        return LegacyComponentSerializer.legacySection().deserialize(text == null ? "" : text);
+    }
+
+    public static net.kyori.adventure.text.Component adventure(Component component)
+    {
+        return io.papermc.paper.adventure.PaperAdventure.asAdventure(component);
+    }
+
+    /** {@code &} -> {@code §}; used when writing config values via /unplugged-admin set. */
+    public static String toSection(String text)
+    {
+        return text == null ? "" : text.replace(AMPERSAND, SECTION);
+    }
+
+    /** {@code §} -> {@code &}; used when suggesting config values. */
+    public static String toAmpersand(String text)
+    {
+        return text == null ? "" : text.replace(SECTION, AMPERSAND);
+    }
+
+    public static String stripFormatting(String text)
+    {
+        if (text == null || text.isEmpty())
+        {
+            return "";
+        }
+
+        StringBuilder out = new StringBuilder(text.length());
+
+        for (int i = 0; i < text.length(); i++)
+        {
+            char c = text.charAt(i);
+
+            if (c == SECTION && i + 1 < text.length())
+            {
+                i++;
+                continue;
+            }
+
+            out.append(c);
+        }
+
+        return out.toString();
+    }
+}

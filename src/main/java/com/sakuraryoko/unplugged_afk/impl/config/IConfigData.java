@@ -18,26 +18,12 @@
  * along with Unplugged-AFK.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.sakuraryoko.unplugged_afk.api.state;
+package com.sakuraryoko.unplugged_afk.impl.config;
 
-public enum UnpluggedStatus
+import org.jetbrains.annotations.ApiStatus;
+
+/** Local replacement for CoreLib's {@code IConfigData}. */
+@ApiStatus.Internal
+public interface IConfigData
 {
-    ACTIVE,
-    INACTIVE,
-    EXPIRED,
-    INTERRUPTED,
-    TERMINATED,
-    ;
-
-    public static String formatStatus(UnpluggedStatus status)
-    {
-        return switch (status)
-        {
-            case ACTIVE -> "§6Active§r";
-            case INACTIVE -> "§aInactive§r";
-            case EXPIRED -> "§bExpired§r";
-            case INTERRUPTED -> "§cInterrupted§r";
-            case TERMINATED -> "§cTerminated§r";
-        };
-    }
 }

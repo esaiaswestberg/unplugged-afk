@@ -24,45 +24,40 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import com.google.common.collect.ImmutableList;
-import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.ApiStatus;
 
-import com.sakuraryoko.corelib.api.config.IConfigData;
-import com.sakuraryoko.corelib.api.config.IConfigDispatch;
-import com.sakuraryoko.corelib.api.time.TimeFormat;
+import com.google.common.collect.ImmutableList;
+import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Nullable;
+
+import com.sakuraryoko.unplugged_afk.impl.Log;
 import com.sakuraryoko.unplugged_afk.impl.Reference;
-import com.sakuraryoko.unplugged_afk.impl.UnpluggedAfk;
 import com.sakuraryoko.unplugged_afk.impl.config.data.UnpluggedConfigData;
-import com.sakuraryoko.unplugged_afk.impl.config.data.options.*;
-import com.sakuraryoko.unplugged_afk.impl.events.ServerEventsHandler;
-import com.sakuraryoko.unplugged_afk.impl.modinit.UnpluggedInit;
-import com.sakuraryoko.unplugged_afk.impl.player.PlayerManager;
+import com.sakuraryoko.unplugged_afk.impl.config.data.options.CommandOptions;
+import com.sakuraryoko.unplugged_afk.impl.config.data.options.MainOptions;
+import com.sakuraryoko.unplugged_afk.impl.config.data.options.MessageOptions;
+import com.sakuraryoko.unplugged_afk.impl.config.data.options.PlayerOptions;
+import com.sakuraryoko.unplugged_afk.impl.config.data.options.UnpluggedOptions;
+import com.sakuraryoko.unplugged_afk.impl.time.TimeFormat;
 
 @ApiStatus.Internal
 public class UnpluggedConfigHandler implements IConfigDispatch
 {
     private static final UnpluggedConfigHandler INSTANCE = new UnpluggedConfigHandler();
+
     public static UnpluggedConfigHandler getInstance() { return INSTANCE; }
+
     private UnpluggedConfigData CONFIG = newConfig();
-    private final String CONFIG_ROOT = ".";
     private final String CONFIG_NAME = Reference.MOD_ID;
     private boolean loaded = false;
     private boolean hideAllPlayers = false;
     private boolean unhideAllPlayers = false;
     private boolean fromReloadCmd = false;
     private boolean commandWarn = false;
+    private @Nullable IConfigExecuteHandler executeHandler;
 
-    @Override
-    public String getConfigRoot()
+    public void setExecuteHandler(@Nullable IConfigExecuteHandler handler)
     {
-        return this.CONFIG_ROOT;
-    }
-
-    @Override
-    public boolean useRootDir()
-    {
-        return true;
+        this.executeHandler = handler;
     }
 
     @Override
@@ -117,7 +112,7 @@ public class UnpluggedConfigHandler implements IConfigDispatch
     @Override
     public void initConfig()
     {
-        UnpluggedAfk.debugLog("UnpluggedConfigHandler#initConfig()");
+        Log.debug("UnpluggedConfigHandler#initConfig()");
     }
 
     @Override
@@ -148,10 +143,9 @@ public class UnpluggedConfigHandler implements IConfigDispatch
     public UnpluggedConfigData defaults()
     {
         UnpluggedConfigData config = this.newConfig();
-        UnpluggedAfk.debugLog("UnpluggedConfigHandler#defaults(): Setting default config.");
+        Log.debug("UnpluggedConfigHandler#defaults(): Setting default config.");
 
-        // Set default values
-        config.config_date = TimeFormat.RFC1123.formatNow(null);
+        config.config_date = TimeFormat.RFC1123.format(System.currentTimeMillis());
         config.MAIN = new MainOptions();
         config.COMMANDS = new CommandOptions();
         config.UNPLUGGED = new UnpluggedOptions();
@@ -165,26 +159,30 @@ public class UnpluggedConfigHandler implements IConfigDispatch
     public UnpluggedConfigData update(IConfigData newConfig)
     {
         UnpluggedConfigData newConf = (UnpluggedConfigData) newConfig;
-        UnpluggedAfk.debugLog("UnpluggedConfigHandler#update(): Refresh config.");
+        Log.debug("UnpluggedConfigHandler#update(): Refresh config.");
 
-        // Refresh
-        CONFIG.comment = UnpluggedInit.getInstance().getModVersionString() + " Config";
-        CONFIG.config_date = TimeFormat.RFC1123.formatNow(null);
+        // Tolerate a hand-edited file that dropped whole sections.
+        if (newConf.MAIN == null) { newConf.MAIN = new MainOptions(); }
+        if (newConf.COMMANDS == null) { newConf.COMMANDS = new CommandOptions(); }
+        if (newConf.UNPLUGGED == null) { newConf.UNPLUGGED = new UnpluggedOptions(); }
+        if (newConf.MESS == null) { newConf.MESS = new MessageOptions(); }
+        if (newConf.PLAYERS == null) { newConf.PLAYERS = new ArrayList<>(); }
+
+        CONFIG.comment = Reference.MOD_NAME + " Config";
+        CONFIG.config_date = TimeFormat.RFC1123.format(System.currentTimeMillis());
 
         if (CONFIG.last_start == null || CONFIG.last_start < 1L)
         {
             CONFIG.last_start = System.currentTimeMillis();
         }
 
-	    CONFIG.last_stop = Objects.requireNonNullElse(newConf.last_stop, -1L);
+        CONFIG.last_stop = Objects.requireNonNullElse(newConf.last_stop, -1L);
 
         if (CONFIG.last_stop < 1L)
         {
-            // last_stop should never be < 1L (Or else thing break)
+            // last_stop should never be < 1L (Or else things break)
             CONFIG.last_stop = CONFIG.last_start - 60000L;     // 1 minute offset
         }
-
-//        UnpluggedAfk.debugLog("UnpluggedConfigHandler#update(): save_date: {} --> {}", newConf.config_date, CONFIG.config_date);
 
         if (CONFIG.UNPLUGGED.unpluggedHidePlayer && !newConf.UNPLUGGED.unpluggedHidePlayer)
         {
@@ -218,7 +216,7 @@ public class UnpluggedConfigHandler implements IConfigDispatch
         CONFIG.UNPLUGGED.copy(newConf.UNPLUGGED);
         CONFIG.MESS.copy(newConf.MESS);
 
-        // Copy Players Config
+        // Copy Players Config (deep copy)
         CONFIG.PLAYERS.clear();
         newConf.PLAYERS.forEach(
                 player ->
@@ -236,7 +234,9 @@ public class UnpluggedConfigHandler implements IConfigDispatch
 
                     CONFIG.PLAYERS.add(newEntry);
                 }
-        );      // Deep copy
+        );
+
+        Log.setDebugEnabled(CONFIG.MAIN.debugMode);
 
         return CONFIG;
     }
@@ -244,45 +244,24 @@ public class UnpluggedConfigHandler implements IConfigDispatch
     @Override
     public void execute(boolean fromInit)
     {
-        UnpluggedAfk.debugLog("UnpluggedConfigHandler#execute(): Execute config.");
+        Log.debug("UnpluggedConfigHandler#execute(): Execute config.");
 
-        // Load data into Player Manager.
-        PlayerManager.getInstance().resetFromConfig();
+        IConfigExecuteHandler handler = this.executeHandler;
 
-        CONFIG.PLAYERS.forEach(
-                player ->
-                        PlayerManager.getInstance().syncFromConfig(player)
-        );
-
-        if (this.unhideAllPlayers)
+        if (handler != null)
         {
-            if (!fromInit && this.fromReloadCmd)
-            {
-                ServerEventsHandler.getInstance().toggleUnhideAllPlayers(true);
-            }
-
-            this.unhideAllPlayers = false;
-        }
-        if (this.hideAllPlayers)
-        {
-            if (!fromInit && this.fromReloadCmd)
-            {
-                ServerEventsHandler.getInstance().toggleHideAllPlayers(true);
-            }
-
-            this.hideAllPlayers = false;
+            handler.onConfigExecute(CONFIG, fromInit, this.hideAllPlayers, this.unhideAllPlayers, this.fromReloadCmd);
         }
 
+        this.hideAllPlayers = false;
+        this.unhideAllPlayers = false;
         this.toggleFromReloadCmd(false);
 
         if (this.commandWarn)
         {
-            UnpluggedAfk.LOGGER.warn("UnpluggedConfigHandler#execute(): You need to restart the server to enable or disable commands.");
+            Log.warn("UnpluggedConfigHandler#execute(): You need to restart the server to enable or disable commands.");
             this.commandWarn = false;
         }
-
-        // Do this when the Config gets finalized.
-//        UnpluggedAfk.debugLog("UnpluggedConfigHandler#execute(): new config_date: {}", CONFIG.config_date);
     }
 
     public void toggleFromReloadCmd(boolean toggle)
@@ -292,13 +271,11 @@ public class UnpluggedConfigHandler implements IConfigDispatch
 
     public void setStartTime()
     {
-//        UnpluggedAfk.debugLog("UnpluggedConfigHandler#setStartTime()");
         this.CONFIG.last_start = System.currentTimeMillis();
     }
 
     public void setStopTime()
     {
-//        UnpluggedAfk.debugLog("UnpluggedConfigHandler#setStopTime()");
         this.CONFIG.last_stop = System.currentTimeMillis();
     }
 
@@ -316,7 +293,7 @@ public class UnpluggedConfigHandler implements IConfigDispatch
     {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-	    Field[] mainFields = MainOptions.class.getDeclaredFields();
+        Field[] mainFields = MainOptions.class.getDeclaredFields();
         Field[] cmdFields = CommandOptions.class.getDeclaredFields();
         Field[] msgFields = MessageOptions.class.getDeclaredFields();
         Field[] unpluggedFields = UnpluggedOptions.class.getDeclaredFields();
@@ -333,12 +310,8 @@ public class UnpluggedConfigHandler implements IConfigDispatch
 
         for (Field field : msgFields)
         {
-            if (field.getType().getSimpleName().equals("DurationOption"))
-            {
-                builder.add(field.getName() + ".option");
-                builder.add(field.getName() + ".customFormat");
-            }
-            else if (field.getType().getSimpleName().equals("TimeDateOption"))
+            if (field.getType().getSimpleName().equals("DurationOption") ||
+                field.getType().getSimpleName().equals("TimeDateOption"))
             {
                 builder.add(field.getName() + ".option");
                 builder.add(field.getName() + ".customFormat");
@@ -357,7 +330,7 @@ public class UnpluggedConfigHandler implements IConfigDispatch
         return builder.build();
     }
 
-    public Pair<Field, Object> getConfigInstanceByField(String fieldName)
+    public @Nullable FieldTarget getConfigInstanceByField(String fieldName)
     {
         String parentName = fieldName;
         String childName = null;
@@ -370,51 +343,30 @@ public class UnpluggedConfigHandler implements IConfigDispatch
             childName = parts[1];
         }
 
-        Pair<Field, Object> parentData = null;
-
-        try
-        {
-            parentData = Pair.of(MainOptions.class.getDeclaredField(parentName), this.CONFIG.MAIN);
-        }
-        catch (NoSuchFieldException ignored) {}
+        FieldTarget parentData = lookup(MainOptions.class, parentName, this.CONFIG.MAIN);
 
         if (parentData == null)
         {
-            try
-            {
-                parentData = Pair.of(CommandOptions.class.getDeclaredField(parentName), this.CONFIG.COMMANDS);
-            }
-            catch (NoSuchFieldException ignored) {}
+            parentData = lookup(CommandOptions.class, parentName, this.CONFIG.COMMANDS);
         }
-
         if (parentData == null)
         {
-            try
-            {
-                parentData = Pair.of(UnpluggedOptions.class.getDeclaredField(parentName), this.CONFIG.UNPLUGGED);
-            }
-            catch (NoSuchFieldException ignored) {}
+            parentData = lookup(UnpluggedOptions.class, parentName, this.CONFIG.UNPLUGGED);
         }
-
         if (parentData == null)
         {
-            try
-            {
-                parentData = Pair.of(MessageOptions.class.getDeclaredField(parentName), this.CONFIG.MESS);
-            }
-            catch (NoSuchFieldException ignored) {}
+            parentData = lookup(MessageOptions.class, parentName, this.CONFIG.MESS);
         }
 
         if (parentData != null && childName != null)
         {
             try
             {
-                Field parentField = parentData.getLeft();
-                Object parentInstance = parentData.getRight();
-                Object wrapperInstance = parentField.get(parentInstance);
+                Field parentField = parentData.field();
+                Object wrapperInstance = parentField.get(parentData.instance());
                 Field childField = parentField.getType().getDeclaredField(childName);
 
-                return Pair.of(childField, wrapperInstance);
+                return new FieldTarget(childField, wrapperInstance);
             }
             catch (Exception e)
             {
@@ -423,5 +375,17 @@ public class UnpluggedConfigHandler implements IConfigDispatch
         }
 
         return parentData;
+    }
+
+    private static @Nullable FieldTarget lookup(Class<?> owner, String fieldName, Object instance)
+    {
+        try
+        {
+            return new FieldTarget(owner.getDeclaredField(fieldName), instance);
+        }
+        catch (NoSuchFieldException ignored)
+        {
+            return null;
+        }
     }
 }

@@ -26,7 +26,7 @@ import org.jspecify.annotations.NonNull;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
-import com.sakuraryoko.unplugged_afk.impl.modinit.InitWrap;
+import com.sakuraryoko.unplugged_afk.impl.nms.Text;
 import com.sakuraryoko.unplugged_afk.impl.player.wrap.GameWrap;
 
 /**
@@ -37,55 +37,46 @@ import com.sakuraryoko.unplugged_afk.impl.player.wrap.GameWrap;
  */
 public record GameState(String gameMode, boolean flying)
 {
-	@Override
-	public @NonNull String toString()
-	{
-		return "GameState{gameType="+this.gameMode+",flying="+this.flying+"}";
-	}
+    @Override
+    public @NonNull String toString()
+    {
+        return "GameState{gameType="+this.gameMode+",flying="+this.flying+"}";
+    }
 
-	@Override
-	public boolean equals(Object o)
-	{
-		if (this == o) { return true; }
-		if (o == null || getClass() != o.getClass()) { return false; }
-		GameState gameState = (GameState) o;
-		return this.gameMode.equals(gameState.gameMode()) && this.flying == gameState.flying;
-	}
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
+        GameState gameState = (GameState) o;
+        return this.gameMode.equals(gameState.gameMode()) && this.flying == gameState.flying;
+    }
 
-	@Override
-	public int hashCode()
-	{
-		return Objects.hash(this.gameMode, this.flying);
-	}
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(this.gameMode, this.flying);
+    }
 
-	public boolean isEmpty()
-	{
-		return GameWrap.defMode().equals(this);
-	}
+    public boolean isEmpty()
+    {
+        return GameWrap.defMode().equals(this);
+    }
 
-	public Component getDebugFormatted()
-	{
-		MutableComponent text = Component.literal("");
+    public Component getDebugFormatted()
+    {
+        MutableComponent text = Text.empty();
 
-		text.append(
-				InitWrap.text().formatText("§r ")
-		).append(
-				InitWrap.text().formatText(
-						String.format("§b%s§r", this.gameMode())
-				)
-		).append(
-				InitWrap.text().formatText(" / F: ")
-		).append(
-				InitWrap.text().formatText(
-						String.format("§e%s§r", this.flying())
-				)
-		);
+        text.append(Text.of("§r "))
+            .append(Text.of(String.format("§b%s§r", this.gameMode())))
+            .append(Text.of(" / F: "))
+            .append(Text.of(String.format("§e%s§r", this.flying())));
 
-		return text;
-	}
+        return text;
+    }
 
-	public GameState copy()
-	{
-		return new GameState(this.gameMode, this.flying);
-	}
+    public GameState copy()
+    {
+        return new GameState(this.gameMode, this.flying);
+    }
 }

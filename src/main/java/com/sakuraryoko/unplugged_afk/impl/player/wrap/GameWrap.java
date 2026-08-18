@@ -32,13 +32,13 @@ import com.sakuraryoko.unplugged_afk.api.state.GameState;
 @ApiStatus.Internal
 public class GameWrap
 {
-	public static GameState defMode()
-	{
-		return new GameState(GameType.DEFAULT_MODE.getName(), false);
-	}
+    public static GameState defMode()
+    {
+        return new GameState(GameType.DEFAULT_MODE.getName(), false);
+    }
 
-	public static GameState of(@Nonnull ServerPlayer player)
-	{
-		return new GameState(player.gameMode.getGameModeForPlayer().getName(), player.getAbilities().flying);
-	}
+    public static GameState of(@Nonnull ServerPlayer player)
+    {
+        return new GameState(player.gameMode.getGameModeForPlayer().getName(), player.getAbilities().flying);
+    }
 }

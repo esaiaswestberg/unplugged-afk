@@ -18,26 +18,18 @@
  * along with Unplugged-AFK.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.sakuraryoko.unplugged_afk.api.state;
+package com.sakuraryoko.unplugged_afk.impl.config;
 
-public enum UnpluggedStatus
+import java.lang.reflect.Field;
+
+import org.jetbrains.annotations.ApiStatus;
+
+/**
+ * Resolved target of a {@code /unplugged-admin set} lookup: the reflective
+ * field plus the options instance it lives on. Replaces the
+ * {@code commons-lang3 Pair} the Fabric build used.
+ */
+@ApiStatus.Internal
+public record FieldTarget(Field field, Object instance)
 {
-    ACTIVE,
-    INACTIVE,
-    EXPIRED,
-    INTERRUPTED,
-    TERMINATED,
-    ;
-
-    public static String formatStatus(UnpluggedStatus status)
-    {
-        return switch (status)
-        {
-            case ACTIVE -> "§6Active§r";
-            case INACTIVE -> "§aInactive§r";
-            case EXPIRED -> "§bExpired§r";
-            case INTERRUPTED -> "§cInterrupted§r";
-            case TERMINATED -> "§cTerminated§r";
-        };
-    }
 }

@@ -18,21 +18,17 @@
  * along with Unplugged-AFK.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.sakuraryoko.unplugged_afk.impl.config.data.options;
-
-import org.jetbrains.annotations.ApiStatus;
+package com.sakuraryoko.unplugged_afk.impl.time;
 
 import com.sakuraryoko.unplugged_afk.impl.config.IConfigOption;
 
-@ApiStatus.Internal
-public class MainOptions implements IConfigOption
+/** Serialises as {@code {"option": "RFC1123", "customFormat": ""}}. */
+public class TimeDateOption implements IConfigOption
 {
-    public boolean unpluggedAfkEnabled;
-    public boolean debugMode;
-    public boolean reducedListDebugInfo;
-    public boolean advancedAdminOptions;
+    public TimeFormat option;
+    public String customFormat;
 
-    public MainOptions()
+    public TimeDateOption()
     {
         this.defaults();
     }
@@ -40,22 +36,29 @@ public class MainOptions implements IConfigOption
     @Override
     public void defaults()
     {
-        this.unpluggedAfkEnabled = true;
-        this.debugMode = false;
-        this.reducedListDebugInfo = true;
-        this.advancedAdminOptions = false;
+        this.option = TimeFormat.RFC1123;
+        this.customFormat = "";
     }
 
     @Override
-    public MainOptions copy(IConfigOption opt)
+    public TimeDateOption copy(IConfigOption other)
     {
-        MainOptions opts = (MainOptions) opt;
-
-        this.unpluggedAfkEnabled = opts.unpluggedAfkEnabled;
-        this.debugMode = opts.debugMode;
-        this.reducedListDebugInfo = opts.reducedListDebugInfo;
-        this.advancedAdminOptions = opts.advancedAdminOptions;
+        if (other instanceof TimeDateOption opts)
+        {
+            this.option = opts.option != null ? opts.option : TimeFormat.RFC1123;
+            this.customFormat = opts.customFormat != null ? opts.customFormat : "";
+        }
 
         return this;
+    }
+
+    public String format(long epochMillis)
+    {
+        return (this.option != null ? this.option : TimeFormat.RFC1123).format(epochMillis, this.customFormat);
+    }
+
+    public String now()
+    {
+        return this.format(System.currentTimeMillis());
     }
 }

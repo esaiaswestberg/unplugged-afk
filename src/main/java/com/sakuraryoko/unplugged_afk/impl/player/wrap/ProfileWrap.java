@@ -21,43 +21,37 @@
 package com.sakuraryoko.unplugged_afk.impl.player.wrap;
 
 import java.util.UUID;
+
 import org.jetbrains.annotations.ApiStatus;
 
 import com.mojang.authlib.GameProfile;
-//#if MC >= 1.21.10
-//$$ import net.minecraft.server.players.NameAndId;
-//#endif
+import net.minecraft.server.players.NameAndId;
 
 @ApiStatus.Internal
 public class ProfileWrap
 {
-	public static UUID id(GameProfile profile)
-	{
-//#if MC >= 1.21.10
-		//$$ return profile.id();
-//#else
-		return profile.getId();
-//#endif
-	}
+    public static UUID id(GameProfile profile)
+    {
+        return profile.id();
+    }
 
-	public static String name(GameProfile profile)
-	{
-//#if MC >= 1.21.10
-		//$$ return profile.name();
-//#else
-		return profile.getName();
-//#endif
-	}
+    public static String name(GameProfile profile)
+    {
+        return profile.name();
+    }
 
-	//#if MC >= 1.21.10
-	//$$public static GameProfile profile(NameAndId nameAndId)
-	//$$ {
-		//$$ return new GameProfile(nameAndId.id(), nameAndId.name());
-	//$$ }
-	//#endif
+    public static GameProfile profile(NameAndId nameAndId)
+    {
+        return new GameProfile(nameAndId.id(), nameAndId.name());
+    }
 
-	public static GameProfile profile(UUID id, String name)
-	{
-		return new GameProfile(id, name);
-	}
+    public static NameAndId nameAndId(GameProfile profile)
+    {
+        return new NameAndId(profile.id(), profile.name());
+    }
+
+    public static GameProfile profile(UUID id, String name)
+    {
+        return new GameProfile(id, name);
+    }
 }

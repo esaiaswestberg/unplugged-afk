@@ -26,11 +26,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
 import com.sakuraryoko.unplugged_afk.impl.config.ConfigWrap;
-import com.sakuraryoko.unplugged_afk.impl.modinit.InitWrap;
+import com.sakuraryoko.unplugged_afk.impl.nms.Text;
 
 /**
  * UnpluggedState -- Describes the status and values of an Unplugged Player; or
  * the stored reason they were removed for recalling as a Feedback message.
+ *
  * @param status Current Status
  * @param time Time limit in Minutes
  * @param timeout Timeout Remaining in ms
@@ -39,113 +40,99 @@ import com.sakuraryoko.unplugged_afk.impl.modinit.InitWrap;
  */
 public record UnpluggedState(UnpluggedStatus status, int time, long timeout, long startTime, String reason)
 {
-	public static final UnpluggedState DEFAULT = new UnpluggedState(UnpluggedStatus.INACTIVE, 129600, -1L, -1L, "");
+    public static final UnpluggedState DEFAULT = new UnpluggedState(UnpluggedStatus.INACTIVE, 129600, -1L, -1L, "");
 
-	@Override
-	public boolean equals(Object o)
-	{
-		if (o == this) { return true; }
-		if (!(o instanceof UnpluggedState s)) { return false; }
+    /** Deliberately compares only status and time -- this drives the config dirty-check. */
+    @Override
+    public boolean equals(Object o)
+    {
+        if (o == this) { return true; }
+        if (!(o instanceof UnpluggedState s)) { return false; }
 
-		return  this.status == s.status &&
-				this.time == s.time;
-	}
+        return  this.status == s.status &&
+                this.time == s.time;
+    }
 
-	@Override
-	public int hashCode()
-	{
-		int hash = 7;
-		hash = 97 * hash + (this.status.hashCode());
-		hash = 97 * hash + Long.hashCode(this.time);
-		hash = 97 * hash + Long.hashCode(this.timeout);
-		hash = 97 * hash + Long.hashCode(this.startTime);
-		hash = 97 * hash + (this.reason != null ? this.reason.hashCode() : 0);
-		return hash;
-	}
+    @Override
+    public int hashCode()
+    {
+        int hash = 7;
+        hash = 97 * hash + (this.status.hashCode());
+        hash = 97 * hash + Long.hashCode(this.time);
+        hash = 97 * hash + Long.hashCode(this.timeout);
+        hash = 97 * hash + Long.hashCode(this.startTime);
+        hash = 97 * hash + (this.reason != null ? this.reason.hashCode() : 0);
+        return hash;
+    }
 
-	@Override
-	public @NonNull String toString()
-	{
-		return "UnpluggedState{" + "status=" + this.status + ", time=" + this.time + ", timeout=" + this.timeout + ", startTime=" + this.startTime + ", reason=" + this.reason + '}';
-	}
+    @Override
+    public @NonNull String toString()
+    {
+        return "UnpluggedState{" + "status=" + this.status + ", time=" + this.time + ", timeout=" + this.timeout + ", startTime=" + this.startTime + ", reason=" + this.reason + '}';
+    }
 
-	public boolean isEmpty()
-	{
-		return this.equals(DEFAULT);
-	}
+    public boolean isEmpty()
+    {
+        return this.equals(DEFAULT);
+    }
 
-	public Component getDebugFormatted()
-	{
-		MutableComponent text = Component.literal("");
+    public Component getDebugFormatted()
+    {
+        MutableComponent text = Text.empty();
 
-		if (!ConfigWrap.mainOpt().reducedListDebugInfo)
-		{
-			text.append(
-					InitWrap.text().formatText("§rST: ")
-			).append(
-					InitWrap.text().formatText(UnpluggedStatus.formatStatus(this.status()))
-			).append(
-					InitWrap.text().formatText("§r / HT: ")
-			).append(
-					InitWrap.text().formatText(String.format("§e%d§r", this.time))
-			).append(
-					InitWrap.text().formatText("§r / TO: ")
-			).append(
-					InitWrap.text().formatText(String.format("§e%d§r", this.timeout))
-			).append(
-					InitWrap.text().formatText("§r / ST: ")
-			).append(
-					InitWrap.text().formatText(String.format("§e%d§r", this.startTime))
-			).append(
-					InitWrap.text().formatText("§r / R: §e")
-			).append(
-					InitWrap.text().formatText(this.reason.isEmpty() ? "<>" : this.reason)
-			).append(
-					InitWrap.text().formatText("§r")
-			);
-		}
-		else
-		{
-			text.append(
-					InitWrap.text().formatText("§rStatus: ")
-			).append(
-					InitWrap.text().formatText(UnpluggedStatus.formatStatus(this.status()))
-			);
-		}
+        if (!ConfigWrap.mainOpt().reducedListDebugInfo)
+        {
+            text.append(Text.of("§rST: "))
+                .append(Text.of(UnpluggedStatus.formatStatus(this.status())))
+                .append(Text.of("§r / HT: "))
+                .append(Text.of(String.format("§e%d§r", this.time)))
+                .append(Text.of("§r / TO: "))
+                .append(Text.of(String.format("§e%d§r", this.timeout)))
+                .append(Text.of("§r / ST: "))
+                .append(Text.of(String.format("§e%d§r", this.startTime)))
+                .append(Text.of("§r / R: §e"))
+                .append(Text.of(this.reason.isEmpty() ? "<>" : this.reason))
+                .append(Text.of("§r"));
+        }
+        else
+        {
+            text.append(Text.of("§rStatus: "))
+                .append(Text.of(UnpluggedStatus.formatStatus(this.status())));
+        }
 
-		return text;
-	}
+        return text;
+    }
 
-	// Fix stupid crashes from people editing the file
-	public UnpluggedState ensureValid()
-	{
-		if (this.status() == UnpluggedStatus.ACTIVE)
-		{
-			int time = this.time;
-			long timeout = this.timeout;
-			long startTime = this.startTime;
+    // Fix stupid crashes from people editing the file
+    public UnpluggedState ensureValid()
+    {
+        if (this.status() == UnpluggedStatus.ACTIVE)
+        {
+            int time = this.time;
+            long timeout = this.timeout;
+            long startTime = this.startTime;
 
-			if (time <= 0)
-			{
-				time = 5;
-			}
-			if (timeout <= 0)
-			{
-				timeout = (time * 60L) * 1000L;
-			}
-			if (startTime <= 0)
-			{
-				startTime = System.currentTimeMillis();
-			}
+            if (time <= 0)
+            {
+                time = 5;
+            }
+            if (timeout <= 0)
+            {
+                timeout = (time * 60L) * 1000L;
+            }
+            if (startTime <= 0)
+            {
+                startTime = System.currentTimeMillis();
+            }
 
-			return new UnpluggedState(UnpluggedStatus.ACTIVE, time, timeout, startTime, this.reason);
-		}
+            return new UnpluggedState(UnpluggedStatus.ACTIVE, time, timeout, startTime, this.reason);
+        }
 
-		return this;
-	}
+        return this;
+    }
 
-	public UnpluggedState copy()
-	{
-		return new UnpluggedState(this.status(), this.time(), this.timeout(), this.startTime(), this.reason());
-	}
+    public UnpluggedState copy()
+    {
+        return new UnpluggedState(this.status(), this.time(), this.timeout(), this.startTime(), this.reason());
+    }
 }

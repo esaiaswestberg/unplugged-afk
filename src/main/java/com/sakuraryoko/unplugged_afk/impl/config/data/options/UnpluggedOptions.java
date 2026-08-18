@@ -20,44 +20,45 @@
 
 package com.sakuraryoko.unplugged_afk.impl.config.data.options;
 
-import com.sakuraryoko.corelib.api.config.IConfigOption;
 import org.jetbrains.annotations.ApiStatus;
+
+import com.sakuraryoko.unplugged_afk.impl.config.IConfigOption;
 
 @ApiStatus.Internal
 public class UnpluggedOptions implements IConfigOption
 {
-	public int defaultUnpluggedTimeout;
-	public boolean resetHealthUponDeath;
-	public boolean unpluggedDisableDamage;
-	public boolean unpluggedHidePlayer;
-	public boolean unpluggedHideFromOps;
+    public int defaultUnpluggedTimeout;
+    public boolean resetHealthUponDeath;
+    public boolean unpluggedDisableDamage;
+    public boolean unpluggedHidePlayer;
+    public boolean unpluggedHideFromOps;
 
-	public UnpluggedOptions()
-	{
-		this.defaults();
-	}
+    public UnpluggedOptions()
+    {
+        this.defaults();
+    }
 
-	@Override
-	public void defaults()
-	{
-		this.defaultUnpluggedTimeout = 129600;
-		this.resetHealthUponDeath = false;
-		this.unpluggedDisableDamage = false;
-		this.unpluggedHidePlayer = false;
-		this.unpluggedHideFromOps = false;
-	}
+    @Override
+    public void defaults()
+    {
+        this.defaultUnpluggedTimeout = 129600;
+        this.resetHealthUponDeath = false;
+        this.unpluggedDisableDamage = false;
+        this.unpluggedHidePlayer = false;
+        this.unpluggedHideFromOps = false;
+    }
 
-	@Override
-	public UnpluggedOptions copy(IConfigOption opt)
-	{
-		UnpluggedOptions opts = (UnpluggedOptions) opt;
+    @Override
+    public UnpluggedOptions copy(IConfigOption opt)
+    {
+        UnpluggedOptions opts = (UnpluggedOptions) opt;
 
-		this.defaultUnpluggedTimeout = opts.defaultUnpluggedTimeout;
-		this.resetHealthUponDeath = opts.resetHealthUponDeath;
-		this.unpluggedDisableDamage = opts.unpluggedDisableDamage;
-		this.unpluggedHidePlayer = opts.unpluggedHidePlayer;
-		this.unpluggedHideFromOps = opts.unpluggedHideFromOps;
+        this.defaultUnpluggedTimeout = opts.defaultUnpluggedTimeout;
+        this.resetHealthUponDeath = opts.resetHealthUponDeath;
+        this.unpluggedDisableDamage = opts.unpluggedDisableDamage;
+        this.unpluggedHidePlayer = opts.unpluggedHidePlayer;
+        this.unpluggedHideFromOps = opts.unpluggedHideFromOps;
 
-		return this;
-	}
+        return this;
+    }
 }

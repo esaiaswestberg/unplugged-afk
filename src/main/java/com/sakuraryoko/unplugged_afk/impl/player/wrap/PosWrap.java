@@ -34,20 +34,16 @@ import com.sakuraryoko.unplugged_afk.api.state.PosState;
 @ApiStatus.Internal
 public class PosWrap
 {
-	public static PosState defaultPos()
-	{
-		return new PosState(Level.OVERWORLD.location().toString(), 0, 0, 0, 0f, 0f);
-	}
+    public static PosState defaultPos()
+    {
+        return new PosState(Level.OVERWORLD.identifier().toString(), 0, 0, 0, 0f, 0f);
+    }
 
-	public static PosState of(@Nonnull ServerPlayer player)
-	{
-		//#if MC >= 1.20.1
-		//$$ ResourceKey<Level> key = player.level().dimension();
-		//#else
-		ResourceKey<Level> key = player.level.dimension();
-		//#endif
-		BlockPos pos = player.blockPosition();
+    public static PosState of(@Nonnull ServerPlayer player)
+    {
+        ResourceKey<Level> key = player.level().dimension();
+        BlockPos pos = player.blockPosition();
 
-		return new PosState(key.location().toString(), pos.getX(), pos.getY(), pos.getZ(), player.getYRot(), player.getXRot());
-	}
+        return new PosState(key.identifier().toString(), pos.getX(), pos.getY(), pos.getZ(), player.getYRot(), player.getXRot());
+    }
 }

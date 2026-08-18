@@ -18,26 +18,39 @@
  * along with Unplugged-AFK.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.sakuraryoko.unplugged_afk.api.state;
+package com.sakuraryoko.unplugged_afk.impl.config;
 
-public enum UnpluggedStatus
+import org.jetbrains.annotations.ApiStatus;
+
+/**
+ * Local replacement for CoreLib's {@code IConfigDispatch}. The lifecycle is
+ * driven by {@link JsonConfigManager}:
+ * {@code onPreLoad -> defaults() -> update(new) -> onPostLoad -> execute(fromInit)}.
+ */
+@ApiStatus.Internal
+public interface IConfigDispatch
 {
-    ACTIVE,
-    INACTIVE,
-    EXPIRED,
-    INTERRUPTED,
-    TERMINATED,
-    ;
+    String getConfigName();
 
-    public static String formatStatus(UnpluggedStatus status)
-    {
-        return switch (status)
-        {
-            case ACTIVE -> "§6Active§r";
-            case INACTIVE -> "§aInactive§r";
-            case EXPIRED -> "§bExpired§r";
-            case INTERRUPTED -> "§cInterrupted§r";
-            case TERMINATED -> "§cTerminated§r";
-        };
-    }
+    IConfigData newConfig();
+
+    IConfigData getConfig();
+
+    boolean isLoaded();
+
+    void initConfig();
+
+    void onPreLoadConfig();
+
+    void onPostLoadConfig();
+
+    void onPreSaveConfig();
+
+    void onPostSaveConfig();
+
+    IConfigData defaults();
+
+    IConfigData update(IConfigData newConfig);
+
+    void execute(boolean fromInit);
 }
