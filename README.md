@@ -1,71 +1,146 @@
-# Unplugged-AFK
+# Unplugged AFK: Paper Edition
 
-[![License](https://img.shields.io/github/license/Fallen-Breath/fabric-mod-template.svg)](http://www.gnu.org/licenses/lgpl-3.0.html)
-[![workflow](https://github.com/sakura-ryoko/unplugged-afk/actions/workflows/gradle.yml/badge.svg)](https://github.com/sakura-ryoko/unplugged-afk/actions/workflows/gradle.yml)
+Stay AFK without leaving your computer on. `/unplug` disconnects you and leaves
+a bot standing exactly where you were — same skin, same gamemode, in the tab
+list — so your farms keep running while your machine is off. Log back in and
+you take its place.
 
-**Unplugged-AFK** is an eco-friendly Minecraft mod that allows players to "go unplugged." By utilizing this mod, players can spawn a bot of themselves to stay AFK at their farms while they disconnect. This allows you to safely shut off your computer, saving electricity and promoting a "Green" approach to server farming!
+A Paper plugin port of [sakura-ryoko's Unplugged-AFK](https://github.com/sakura-ryoko/unplugged-afk)
+Fabric mod.
 
-![InfoGraphic](https://github.com/sakura-ryoko/unplugged-afk/blob/master/Infographic_hd.png?raw=true)
+## Requirements
 
-## Prerequisites & Installation
-* **Mod Loader:** Fabric
-* **Minecraft Version:** 1.19.2 up to 26.2
+* **Paper 26.2** (or a fork of it). Not Spigot or Bukkit — this uses Paper-only
+  internals.
+* **Java 25**, which Paper 26.2 requires anyway.
 
-## Features
-* **Go Green:** Turn off your PC while your player-bot continues to AFK for you.
-* **Customizable Timeouts:** Set specific durations for how long a bot should remain active. The default timeout is 129600 minutes (90 days).
-* **Admin Control:** Server administrators have full command control to spawn, kick, or manage unplugged players.
-* **Safety Options:** Configurations allow you to reset health upon death, disable damage for unplugged players, or even hide them from other players and operators.
-* **Server Restart:** The mod also respawns all AFK bots at server restart with a slight delay.
+Drop the jar in `plugins/` and restart. There are no other dependencies.
+
+> This plugin removes players from the player list and rewrites their `.dat`
+> files — that is how it works, not a side effect. Try it on a test server or
+> take a backup first.
+
+## How it works
+
+`/unplug` kicks you, then places a real server-side player in your position on
+the next tick. It is a genuine `ServerPlayer`, so it keeps chunks loaded, ticks
+farms, shows up in the tab list, and can be hurt or killed.
+
+Sessions survive a restart: bots are written to the config on shutdown and
+respawned on boot, staggered a few seconds apart, with the downtime subtracted
+from their remaining time.
 
 ## Commands
 
-### Player Commands
-* **`/unplug [<minutes>] [<reason>]`**: Disconnects you and leaves an unplugged bot in your place.
-  * *Note: This command cannot be used by the single-player server owner*.
+### Players
 
-### Admin Commands
-Requires permission level 3 by default.
-* **`/unplugged-admin`**: Displays information about the mod.
-* **`/unplugged-admin save`**: Saves the current configuration.
-* **`/unplugged-admin reload`**: Reloads the configuration, overwriting the current configuration.
-* **`/unplugged-admin purge`**: Purges players and resyncs the current player/unplugged maps with the live server.
-* **`/unplugged-admin spawn <player> [<minutes>] [<reason>]`**: Manually spawns an unplugged bot for a specified player.
-* **`/unplugged-admin kick <player>`**: Removes/kicks an active unplugged bot.
-* **`/unplugged-admin info [<player>]`**: Displays detailed debug information for a specific player. (`advancedAdminOptions` enables the full "player" info)
-* **`/unplugged-admin list [players|unplugged|all]`**: Lists currently tracked players or active unplugged bots. (`advancedAdminOptions` enables the list sub commands)
-* **`/unplugged-admin set <setting> <value>`**: Sets a config setting value. (`advancedAdminOptions` enables this sub command)
+| Command | Description |
+|:---|:---|
+| `/unplug [<minutes>] [<reason>]` | Disconnect and leave a bot behind. |
+| `/afk [<minutes>] [<reason>]` | Identical alias, off by default. Skipped automatically if another plugin owns `/afk`. |
+
+### Administration
+
+`/unplugged-admin` — operator by default.
+
+| Subcommand | Description |
+|:---|:---|
+| `save` / `reload` | Write or re-read the config. |
+| `list [players\|unplugged\|all]` | Show tracked players and live bots. |
+| `info [<player>]` | Detailed state for one player. |
+| `purge` | Drop all tracked players and resync. |
+| `spawn <player> [<minutes>] [<reason>]` | Spawn a bot for an offline player. |
+| `kick <target>` | Remove a bot and end its session. |
+| `set <option> <value>` | Change any config option, then save and reload. |
+
+The subcommands `info`, `list players|unplugged|all` and `set` require
+`advancedAdminOptions` to be enabled in the config.
+
+## Permissions
+
+| Node | Default | Grants |
+|:---|:---|:---|
+| `unplugged_afk.unplug` | everyone | `/unplug` |
+| `unplugged_afk.afk` | everyone | `/afk` |
+| `unplugged_afk.unplugged-admin` | operator | `/unplugged-admin` |
+| `unplugged_afk.unplugged-admin.<subcommand>` | operator | One subcommand. |
+
+Where no node is set, the plugin falls back to the operator level configured in
+`commands`, matching how the Fabric mod behaved.
+
+### Limiting session length
+
+| Node | Grants |
+|:---|:---|
+| `unplugged_afk.maxtime.<minutes>` | A ceiling, in minutes. |
+| `unplugged_afk.maxtime.unlimited` | No ceiling. |
+
+The highest node a player holds wins, so someone in several groups gets the most
+generous one. With no node granted, the ceiling is `defaultUnpluggedTimeout`.
+
+The ceiling applies to the default as well as to an explicit argument, so a
+player with `maxtime.60` gets 60 minutes from a bare `/unplug`. Asking for more
+clamps and says so.
+
+```yaml
+# LuckPerms: let regulars idle for a day, donors indefinitely
+/lp group default permission set unplugged_afk.maxtime.1440 true
+/lp group donor permission set unplugged_afk.maxtime.unlimited true
+```
 
 ## Configuration
 
-The mod features a highly customizable `unplugged_afk.json` file. Key options include:
+See [CONFIG.md](CONFIG.md). The file lives at
+`plugins/unplugged-afk-paper-edition/unplugged-afk-paper-edition.json`, and a
+config from the Fabric mod or an earlier build is adopted automatically.
 
-| Category      | Option                             | Description                                                                                               | Default  |
-|:--------------|:-----------------------------------|:----------------------------------------------------------------------------------------------------------|:---------|
-| **Main**      | `unpluggedAfkEnabled`              | Toggles the entire AFK feature.                                                                           | `true`   |
-| **Main**      | `debugMode`                        | Enables debugging output.                                                                                 | `false`  |
-| **Main**      | `reducedListDebugInfo`             | Enables Reduced output for various information commands.                                                  | `true`   |
-| **Main**      | `advancedAdminOptions`             | Enables advanced Admin options, such as 'set'.                                                            | `false`  |
-| **Unplugged** | `defaultUnpluggedTimeout`          | Set the default timeout (in minutes).  The default is for 90 days.                                        | `129600` |
-| **Unplugged** | `resetHealthUponDeath`             | Resets the AFK bots Health when killed.                                                                   | `false`  |
-| **Unplugged** | `unpluggedDisableDamage`           | Prevents the AFK bot from taking damage.                                                                  | `false`  |
-| **Unplugged** | `unpluggedHidePlayer`              | Makes the bot invisible to others.                                                                        | `false`  |
-| **Unplugged** | `unpluggedHideFromOps`             | Makes the bot invisible to to Operators as well.                                                          | `false`  |
-| **Command**   | `unplugCommandPermissions`         | Permission level required to use `/unplug`.                                                               | `0`      |
-| **Command**   | `unpluggedAdminCommandPermissions` | Permission level for `/unplugged-admin`.                                                                  | `3`      |
-| **Command**   | `afkCommandPermissions`            | Permission level required to use `/afk`.                                                                  | `0`      |
-| **Command**   | `enableUnplugCommand`              | Enables the `/unplug` Command.                                                                            | `true`   |
-| **Command**   | `enableAfkCommand`                 | Enables the `/afk` Command. (Works the same as `/unplug`)                                                 | `false`  |
-| **Messages**  | `broadcastMessages`                | Enables the broadcasting of Unplugged status messages.                                                    | `false`  |
-| **Messages**  | `hideUnpluggedJoin`                | Enables the disabling of the default `player has joined` messages while bots are spawned, where possible. | `false`  |
-| **Messages**  | `displayDuration`                  | Enables the duration display of Unplugged status messages.                                                | `false`  |
-| **Messages**  | `displayReturnFeedback`            | Enables the Feedback display of the reason why an Unplugged session ended                                 | `false`  |
+## For developers
 
-**Messages & Formatting:**
-Server owners can extensively customize broadcast messages and formatting. For example, the default kick message when a player successfully uses the command is `"§6Your player will be AFK§r"`.
-The `duration` and the `timeDate` are CoreLib time formatting options for the broadcast messages while `displayDuration` is enabled.
+`UnpluggedAfkAPI` exposes session state, and three Bukkit events fire as
+sessions begin, respawn and end.
 
-### Example Config
-[Click Here to open on GitHub](https://github.com/sakura-ryoko/unplugged-afk/blob/master/CONFIG.md)
+```java
+if (UnpluggedAfkAPI.isUnplugged(player.getUniqueId()))
+{
+    // that "player" is a bot
+}
 
-[![Join Sakura's RyokoCraft Discord](https://sakuraryoko.com/files/1398873/discord-300px.png)](https://discord.gg/ryokocraftmc)
+@EventHandler
+public void onUnplugged(UnpluggedStartEvent event)
+{
+    getLogger().info(event.getPlayerId() + " went AFK");
+}
+```
+
+## Differences from the Fabric mod
+
+Behaviour is otherwise the same. Known differences:
+
+* **Bots appear a few ticks later.** Paper defers disconnects by a tick, so the
+  bot is placed after the player is fully gone rather than instantly.
+* **Slime-block flying machines are approximate.** The push is applied from the
+  bot's own tick instead of from inside the piston's movement code, so fast
+  machines may behave differently.
+* **Escaping the End is a plain teleport.** The original substituted the player
+  during respawn, which Paper does not allow.
+* **`resetHealthUponDeath` actually keeps the session alive.** In the Fabric mod
+  it healed the bot and ended the session anyway.
+* **Single version.** This targets Paper 26.2 only, where the mod supported
+  1.19.2 through 26.2.
+
+Other plugins see bots as ordinary players joining and quitting, from
+`127.0.0.1`. Anticheats in particular may object to a player that moves without
+a client; if you hit that, exempt the bots or turn on `unpluggedHidePlayer`.
+
+## Building
+
+```bash
+./gradlew build
+```
+
+The jar is written to `build/libs/`.
+
+## Licence
+
+LGPL-3.0, inherited from the original mod. Copyright remains with sakura-ryoko
+and contributors; see the file headers.
