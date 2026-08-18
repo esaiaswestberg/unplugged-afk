@@ -1,0 +1,64 @@
+/*
+ * This file is part of Unplugged AFK: Paper Edition, licensed under the
+ * GNU Lesser General Public License v3.0
+ *
+ * Copyright (C) 2026  Sakura-Ryoko and contributors
+ *
+ * Unplugged AFK: Paper Edition is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Unplugged AFK: Paper Edition is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Unplugged AFK: Paper Edition.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package io.github.esaiaswestberg.unpluggedafk.impl.config.data.options;
+
+import org.jetbrains.annotations.ApiStatus;
+
+import io.github.esaiaswestberg.unpluggedafk.impl.config.IConfigOption;
+
+@ApiStatus.Internal
+public class CommandOptions implements IConfigOption
+{
+    public int unplugCommandPermissions;
+    public int unpluggedAdminCommandPermissions;
+    public int afkCommandPermissions;
+    public boolean enableUnplugCommand;
+    public boolean enableAfkCommand;
+
+    public CommandOptions()
+    {
+        this.defaults();
+    }
+
+    @Override
+    public void defaults()
+    {
+        this.unplugCommandPermissions = 0;
+        this.unpluggedAdminCommandPermissions = 4;
+        this.afkCommandPermissions = 0;
+        this.enableUnplugCommand = true;
+        this.enableAfkCommand = false;
+    }
+
+    @Override
+    public CommandOptions copy(IConfigOption opt)
+    {
+        CommandOptions opts = (CommandOptions) opt;
+
+        this.unplugCommandPermissions = opts.unplugCommandPermissions;
+        this.unpluggedAdminCommandPermissions = opts.unpluggedAdminCommandPermissions;
+        this.afkCommandPermissions = opts.afkCommandPermissions;
+        this.enableUnplugCommand = opts.enableUnplugCommand;
+        this.enableAfkCommand = opts.enableAfkCommand;
+
+        return this;
+    }
+}

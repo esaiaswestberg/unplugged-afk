@@ -1,11 +1,13 @@
-name: ${name}
+name: ${slug}
 version: '${version}'
-main: com.sakuraryoko.unplugged_afk.impl.UnpluggedAfkPlugin
+main: io.github.esaiaswestberg.unpluggedafk.impl.UnpluggedAfkPlugin
 api-version: '${apiVersion}'
 description: ${description}
 authors:
   - ${author}
-website: https://github.com/esaiaswestberg/unplugged-afk
+  # Original Fabric mod; this is an LGPL-3.0 derivative work.
+  - ${originalAuthor}
+website: https://github.com/esaiaswestberg/unplugged-afk-paper-edition
 
 permissions:
   unplugged_afk.unplug:

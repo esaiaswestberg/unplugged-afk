@@ -52,8 +52,10 @@ tasks {
     processResources {
         val props = mapOf(
             "id" to project.property("plugin_id"),
-            "name" to project.property("plugin_name"),
+            "slug" to project.property("plugin_slug"),
+            "displayName" to project.property("plugin_display_name"),
             "author" to project.property("plugin_author"),
+            "originalAuthor" to project.property("plugin_original_author"),
             "version" to project.version,
             "description" to project.description,
             "apiVersion" to minecraftVersion,

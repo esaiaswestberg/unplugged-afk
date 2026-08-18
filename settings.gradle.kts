@@ -5,4 +5,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "unplugged-afk"
+rootProject.name = "unplugged-afk-paper-edition"
