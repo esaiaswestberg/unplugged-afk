@@ -89,7 +89,12 @@ public class UnplugCommand
             reason = ConfigWrap.mess().defaultUnpluggedReason;
         }
 
-        UnpluggedServerPlayer.createFromPlayer(Nms.server(), player, time, reason);
+        if (!UnpluggedServerPlayer.createFromPlayer(Nms.server(), player, time, reason))
+        {
+            ctx.getSource().getSender().sendMessage(Text.adventure("§cCould not start an AFK session; check the server log.§r"));
+            return 0;
+        }
+
         return 1;
     }
 }

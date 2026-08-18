@@ -58,15 +58,20 @@ public class BukkitBridge implements Listener
     public void onQuit(PlayerQuitEvent event)
     {
         Player player = event.getPlayer();
+        Log.debug("BukkitBridge#onQuit(): '{}' quit (pending unplug: {})",
+                  player.getName(), UnpluggedSpawner.getInstance().isPending(player.getUniqueId()));
 
         if (UnpluggedSpawner.getInstance().isPending(player.getUniqueId()))
         {
+            // Both the player's own quit line and the shadow's follow-up join
+            // line are governed by the same config option.
             if (ConfigWrap.mess().hideUnpluggedJoin)
             {
                 event.quitMessage(null);
+                PlayerEventsHandler.getInstance().addShouldHideJoin(player.getName());
             }
 
-            PlayerEventsHandler.getInstance().addShouldHideJoin(player.getName());
+            Log.debug("BukkitBridge#onQuit(): '{}' quit while unplugging, handing to the spawner", player.getName());
             UnpluggedSpawner.getInstance().onQuit(player.getUniqueId());
         }
     }

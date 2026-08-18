@@ -291,8 +291,7 @@ public class UnpluggedServerPlayer extends ServerPlayer
      * {@link UnpluggedSpawner} finishes the job a tick later, once
      * {@code PlayerQuitEvent} has fired and the player NBT is on disk.
      */
-    @Nullable
-    public static UnpluggedServerPlayer createFromPlayer(MinecraftServer server, ServerPlayer player, int time, String reason)
+    public static boolean createFromPlayer(MinecraftServer server, ServerPlayer player, int time, String reason)
     {
         if (time <= 0)
         {
@@ -312,13 +311,25 @@ public class UnpluggedServerPlayer extends ServerPlayer
             kickMsg = Component.translatable("multiplayer.disconnect.duplicate_login");
         }
 
-        if (!UnpluggedPlayerUtils.ensureSafeForUUID(server, player.getUUID()))
+        // NB: no ensureSafeForUUID check here. The Fabric build ran it after
+        // PlayerList#remove, where it catches a stale duplicate; at this point
+        // the invoking player is still listed, so it would always fail.
+        // spawnFromCapture performs the real check once the player is gone.
+
+        if (UnpluggedSpawner.getInstance().isPending(player.getUUID()))
         {
-            return null;
+            Log.debug("createFromPlayer: '{}' is already unplugging", player.getName().getString());
+            return false;
+        }
+
+        if (player instanceof UnpluggedServerPlayer)
+        {
+            Log.debug("createFromPlayer: '{}' is already a shadow", player.getName().getString());
+            return false;
         }
 
         UnpluggedSpawner.getInstance().scheduleFromPlayer(player, time, timeout, reason, kickMsg);
-        return null;
+        return true;
     }
 
     /**

@@ -140,6 +140,8 @@ public class UnpluggedSpawner
             return;
         }
 
+        Log.debug("UnpluggedSpawner#onQuit(): scheduling spawn for '{}'", capture.profile().name());
+
         Bukkit.getScheduler().runTask(plugin, () ->
         {
             try
@@ -149,6 +151,10 @@ public class UnpluggedSpawner
                 if (shadow == null)
                 {
                     Log.warn("UnpluggedSpawner: failed to spawn a shadow for '{}'", capture.profile().name());
+                }
+                else
+                {
+                    Log.debug("UnpluggedSpawner: spawned shadow for '{}'", capture.profile().name());
                 }
             }
             catch (Exception e)
