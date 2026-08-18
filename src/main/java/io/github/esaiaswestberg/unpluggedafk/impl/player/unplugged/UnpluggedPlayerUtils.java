@@ -166,6 +166,43 @@ public class UnpluggedPlayerUtils
                 }
             }
         }
+
+        applyWaypointVisibility(sp);
+    }
+
+    /**
+     * Keeps the shadow off (or on) the locator bar.
+     *
+     * <p>The Fabric build hooked {@code ServerWaypointManager#addPlayer} and
+     * {@code updatePlayer} with a mixin. Paper fires no event there, but both
+     * methods are public in 26.2, so visibility is simply reasserted -- at spawn
+     * and on the shadow's tick cycle, since movement re-adds the waypoint.
+     */
+    @ApiStatus.Internal
+    public static void applyWaypointVisibility(@Nonnull UnpluggedServerPlayer sp)
+    {
+        if (!sp.isValid())
+        {
+            return;
+        }
+
+        ServerWaypointManager manager = sp.level().getWaypointManager();
+
+        if (manager == null)
+        {
+            return;
+        }
+
+        if (ConfigWrap.unplugged().unpluggedHidePlayer)
+        {
+            // Hiding from ops versus everyone is indistinguishable for waypoints,
+            // so any hiding at all takes the shadow off the bar.
+            manager.removePlayer(sp);
+        }
+        else
+        {
+            manager.addPlayer(sp);
+        }
     }
 
     @ApiStatus.Internal
@@ -223,6 +260,33 @@ public class UnpluggedPlayerUtils
                 manager.addPlayer(player);
             }
         }
+    }
+
+    /**
+     * Evicts a shadow standing in for a player who is logging back in.
+     *
+     * <p>The Fabric build reached this from a mixin wrapping
+     * {@code PlayerList#canPlayerLogin}. On Paper the caller is a
+     * {@code PlayerConnectionValidateLoginEvent} listener, which fires at the
+     * same point -- immediately before {@code disconnectAllPlayersWithProfile}.
+     *
+     * @return true if a shadow was found and evicted
+     */
+    @ApiStatus.Internal
+    public static boolean evictShadowForLogin(@Nonnull MinecraftServer server, @Nonnull UUID uuid, String name)
+    {
+        PlayerList playerList = server.getPlayerList();
+        ServerPlayer existing = playerList.getPlayer(uuid);
+
+        if (!(existing instanceof UnpluggedServerPlayer))
+        {
+            return false;
+        }
+
+        Log.debug("evictShadowForLogin(): evicting shadow for ['{}'/{}]", name, uuid);
+        checkForUnpluggedAtPreLogin(playerList, ProfileWrap.profile(uuid, name), existing);
+
+        return true;
     }
 
     @ApiStatus.Internal

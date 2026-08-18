@@ -76,6 +76,10 @@ import net.minecraft.world.food.FoodData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.piston.PistonMovingBlockEntity;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.block.entity.SkullBlockEntity;
 
@@ -100,6 +104,10 @@ public class UnpluggedServerPlayer extends ServerPlayer
     private long lastTick = -1L;
     private boolean isValid = false;
     private boolean removalStarted = false;
+    private static final long REVIVE_WINDOW_MS = 10_000L;
+    private static final int MAX_REVIVES_PER_WINDOW = 3;
+    private long lastReviveTime = -1L;
+    private int reviveCount = 0;
     private boolean expired = false;
 
     public UnpluggedServerPlayer(MinecraftServer server, ServerLevel level, GameProfile profile, ClientInformation ci)
@@ -648,10 +656,18 @@ public class UnpluggedServerPlayer extends ServerPlayer
             }
 
             this.tickUnplugged(server);
+
+            if (ConfigWrap.unplugged().unpluggedHidePlayer)
+            {
+                UnpluggedPlayerUtils.applyWaypointVisibility(this);
+            }
+
             this.connection.resetPosition();
             this.level().getChunkSource().move(this);
 //          this.hasChangedDimension();
         }
+
+        this.applyPistonPush();
 
         try
         {
@@ -746,17 +762,112 @@ public class UnpluggedServerPlayer extends ServerPlayer
         this.dismount();
         super.die(damageSource);
 
-        if (ConfigWrap.unplugged().resetHealthUponDeath)
+        if (ConfigWrap.unplugged().resetHealthUponDeath && this.canReviveAgain())
         {
-            this.setHealth(20.0F);
-            this.foodData = new FoodData();
-        }
-        else
-        {
-            this.killShadow(Text.of("Player has Died"));
+            // Keep the session alive, as the option advertises. The Fabric build
+            // leaned on a mixin that made PlayerList#respawn build another
+            // shadow; Paper offers no way to substitute the player constructed
+            // there, so the existing one is resurrected in place instead.
+            this.reviveShadow();
+            return;
         }
 
+        this.killShadow(Text.of("Player has Died"));
         this.kill(this.getCombatTracker().getDeathMessage());
+    }
+
+    /**
+     * Guards against reviving into whatever just killed the shadow -- lava, a
+     * suffocating wall -- which would otherwise loop forever, dropping the
+     * inventory and firing a death event every time. After too many deaths in
+     * quick succession the session is ended normally instead.
+     */
+    private boolean canReviveAgain()
+    {
+        final long now = System.currentTimeMillis();
+
+        if ((now - this.lastReviveTime) > REVIVE_WINDOW_MS)
+        {
+            this.reviveCount = 0;
+        }
+
+        this.lastReviveTime = now;
+        this.reviveCount++;
+
+        if (this.reviveCount > MAX_REVIVES_PER_WINDOW)
+        {
+            Log.warn("Shadow '{}' died {} times in {} seconds; ending the session instead of reviving again.",
+                     this.getName().getString(), this.reviveCount, REVIVE_WINDOW_MS / 1000L);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Carries the shadow along on a slime-block flying machine.
+     *
+     * <p>A real client applies this movement itself while it rides a moving
+     * slime block, so the Fabric build patched
+     * {@code PistonMovingBlockEntity#moveCollidedEntities} to do it server-side
+     * for shadows. There is no hook for that on Paper, so the moving piston is
+     * looked up from the shadow's own tick instead and the same per-axis delta
+     * applied.
+     *
+     * <p>Approximate by nature: this runs at a different point in the tick than
+     * the original injection did, so fast machines may behave slightly
+     * differently.
+     */
+    private void applyPistonPush()
+    {
+        AABB box = this.getBoundingBox().inflate(0.25D);
+        BlockPos min = BlockPos.containing(box.minX, box.minY, box.minZ);
+        BlockPos max = BlockPos.containing(box.maxX, box.maxY, box.maxZ);
+
+        for (BlockPos pos : BlockPos.betweenClosed(min, max))
+        {
+            if (!(this.level().getBlockEntity(pos) instanceof PistonMovingBlockEntity piston))
+            {
+                continue;
+            }
+
+            if (!piston.getMovedState().is(Blocks.SLIME_BLOCK))
+            {
+                continue;
+            }
+
+            Vec3 movement = this.getDeltaMovement();
+            double x = movement.x();
+            double y = movement.y();
+            double z = movement.z();
+            Direction direction = piston.getMovementDirection();
+
+            switch (direction.getAxis())
+            {
+                case X -> x = direction.getStepX();
+                case Y -> y = direction.getStepY();
+                case Z -> z = direction.getStepZ();
+            }
+
+            this.setDeltaMovement(x, y, z);
+            return;
+        }
+    }
+
+    private void reviveShadow()
+    {
+        this.dead = false;
+        this.deathTime = 0;
+        this.setHealth(this.getMaxHealth());
+        this.foodData = new FoodData();
+        this.removeAllEffects();
+        this.setLastHurtByMob(null);
+        this.getCombatTracker().recheckStatus();
+        this.clearFire();
+        this.setRemainingFireTicks(0);
+        this.unsetRemoved();
+
+        Log.debug("reviveShadow(): '{}' revived in place with full health", this.getName().getString());
     }
 
     public void killShadow(Component message)
