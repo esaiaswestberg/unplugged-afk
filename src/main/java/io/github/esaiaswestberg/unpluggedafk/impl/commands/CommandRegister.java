@@ -27,7 +27,6 @@ import org.jetbrains.annotations.ApiStatus;
 
 import io.github.esaiaswestberg.unpluggedafk.impl.Log;
 import io.github.esaiaswestberg.unpluggedafk.impl.Reference;
-import io.github.esaiaswestberg.unpluggedafk.impl.commands.server.DebugCommand;
 import io.github.esaiaswestberg.unpluggedafk.impl.commands.server.UnpluggedAdminCommand;
 import io.github.esaiaswestberg.unpluggedafk.impl.commands.server.UnplugCommand;
 import io.github.esaiaswestberg.unpluggedafk.impl.config.ConfigWrap;
@@ -47,9 +46,6 @@ public class CommandRegister
         plugin.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event ->
         {
             var registrar = event.registrar();
-
-            // TEMPORARY test harness
-            registrar.register(DebugCommand.build(), Reference.MOD_NAME + " debug harness");
 
             // The admin command stays available even when the feature is off,
             // so an operator can turn it back on with /unplugged-admin set.
