@@ -10,9 +10,9 @@ Fabric mod.
 
 ## Requirements
 
-* **Paper 26.2** (or a fork of it). Not Spigot or Bukkit — this uses Paper-only
+* **Paper 26.3** (or a fork of it). Not Spigot or Bukkit — this uses Paper-only
   internals.
-* **Java 25**, which Paper 26.2 requires anyway.
+* **Java 25**, which Paper 26.3 requires anyway.
 
 Drop the jar in `plugins/` and restart. There are no other dependencies.
 
@@ -125,8 +125,8 @@ Behaviour is otherwise the same. Known differences:
   during respawn, which Paper does not allow.
 * **`resetHealthUponDeath` actually keeps the session alive.** In the Fabric mod
   it healed the bot and ended the session anyway.
-* **Single version.** This targets Paper 26.2 only, where the mod supported
-  1.19.2 through 26.2.
+* **Single version.** This targets Paper 26.3 only, where the mod supported
+  1.19.2 through 26.3.
 
 Other plugins see bots as ordinary players joining and quitting, from
 `127.0.0.1`. Anticheats in particular may object to a player that moves without
@@ -139,6 +139,9 @@ a client; if you hit that, exempt the bots or turn on `unpluggedHidePlayer`.
 ```
 
 The jar is written to `build/libs/`.
+
+The build needs a JDK 25 toolchain, which Gradle will use for the plugin itself
+and for the server internals it compiles against.
 
 ## Releasing
 

@@ -254,8 +254,10 @@ public class UnpluggedServerPlayer extends ServerPlayer
         if (gameType.isSurvival())
         {
             // Survival players shouldn't be able to fly, or be invulnerable.
+            // 26.3 split Entity#setInvulnerable into a permanent flag and the
+            // hurt cooldown; this is the permanent one.
             shadow.getAbilities().flying = false;
-            shadow.setInvulnerable(false);
+            shadow.setPermanentlyInvulnerable(false);
         }
         else
         {
@@ -384,8 +386,10 @@ public class UnpluggedServerPlayer extends ServerPlayer
         if (shadow.gameMode.isSurvival())
         {
             // Survival players shouldn't be able to fly, or be invulnerable.
+            // 26.3 split Entity#setInvulnerable into a permanent flag and the
+            // hurt cooldown; this is the permanent one.
             shadow.getAbilities().flying = false;
-            shadow.setInvulnerable(false);
+            shadow.setPermanentlyInvulnerable(false);
         }
         else
         {

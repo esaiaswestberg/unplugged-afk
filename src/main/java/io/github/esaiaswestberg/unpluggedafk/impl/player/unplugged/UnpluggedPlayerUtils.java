@@ -175,7 +175,7 @@ public class UnpluggedPlayerUtils
      *
      * <p>The Fabric build hooked {@code ServerWaypointManager#addPlayer} and
      * {@code updatePlayer} with a mixin. Paper fires no event there, but both
-     * methods are public in 26.2, so visibility is simply reasserted -- at spawn
+     * methods are public in 26.3, so visibility is simply reasserted -- at spawn
      * and on the shadow's tick cycle, since movement re-adds the waypoint.
      */
     @ApiStatus.Internal
@@ -316,9 +316,11 @@ public class UnpluggedPlayerUtils
                 PlayerManager.getInstance().setState(profile, newState);
             }
 
-            if (player.isInvulnerable() && player.gameMode.isSurvival())
+            // 26.3 split Entity#isInvulnerable into a permanent flag and the
+            // hurt cooldown; only the permanent one is cleared here.
+            if (player.isPermanentlyInvulnerable() && player.gameMode.isSurvival())
             {
-                player.setInvulnerable(false);
+                player.setPermanentlyInvulnerable(false);
             }
 
             final String name = ProfileWrap.name(profile);

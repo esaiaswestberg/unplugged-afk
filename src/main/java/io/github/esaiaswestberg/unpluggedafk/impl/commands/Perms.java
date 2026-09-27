@@ -67,7 +67,7 @@ public class Perms
     }
 
     /**
-     * Maps the config's vanilla operator level onto 26.2's named permissions.
+     * Maps the config's vanilla operator level onto 26.3's named permissions.
      * Level 0 means "no permission required", so it maps to null.
      */
     public static Permission permissionFromInt(int level)
